@@ -1,123 +1,85 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using Talk = System.Int32;
+using CommonTypes;
 
 namespace Timetable1
 {
-    using Talks = List<Talk>;
-    using Timetable = List<List<Talk>>;
-    using ClashesMap = Dictionary<Talk, List<Talk>>;
-
     internal static class Program
     {
-        private static void Main(/* string[] args */)
+        private static void Main()
         {
             var timetables = Test();
-            Console.WriteLine("Number of timetables found: {0}", timetables.Count);
+            Console.WriteLine("Number of timetables found: {0}", timetables.AsEnumerable().Count());
         }
 
-        // bench :: Int -> Int -> Int -> Int -> Int -> StdGen -> ([Person],[Talk],[TimeTable])
-        // 
-        // bench nslots ntracks ntalks npersons c_per_s gen =
-        //   (persons, talks, timetable persons talks ntracks nslots)
-        //  where
-        //   total_talks = nslots * ntracks
-        // 
-        //   talks = map Talk [1..total_talks]
-        //   persons = mkpersons npersons gen
-        // 
-        //   mkpersons :: Int -> StdGen -> [Person]
-        //   mkpersons 0 g = []
-        //   mkpersons n g = Person ('P':show n) (take c_per_s cs) : rest
-        //         where
-        //           (g1,g2) = split g
-        //           rest = mkpersons (n-1) g2
-        //           cs = nub [ talks !! n | n <- randomRs (0,ntalks-1) g ]
-
-        private static List<Timetable> Test()
+        private static Timetables Test()
         {
-            var cs = new Talks {1, 2, 3, 4};
+            var c1 = new Talk(1);
+            var c2 = new Talk(2);
+            var c3 = new Talk(3);
+            var c4 = new Talk(4);
+            var cs = new Talks(ImmutableList.Create(c1, c2, c3, c4));
             var testPersons = new[]
             {
-                new Person("P", new Talks{1,2}),
-                new Person("Q", new Talks{2,3}),
-                new Person("R", new Talks{3,4}),
-                new Person("S", new Talks{1,4})
+                new Person("P", new Talks(ImmutableList.Create(c1, c2))),
+                new Person("Q", new Talks(ImmutableList.Create(c2, c3))),
+                new Person("R", new Talks(ImmutableList.Create(c3, c4))),
+                new Person("S", new Talks(ImmutableList.Create(c1, c4)))
             };
             return Timetable(testPersons, cs, 2, 2);
         }
 
-        private static List<Timetable> Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
+        private static Timetables Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
         {
             var clashes = BuildClashesMap(people);
 
-            Func<int, int, List<List<Talk>>, List<Talk>, List<Talk>, List<Talk>, List<Timetable>> generate = null;
+            Func<int, int, Timetable, Talks, Talks, Talks, Timetables> generate = null;
 
             generate = (slotNo, trackNo, slots, slot, slotTalks, talks) =>
             {
                 if (slotNo == maxSlot)
-                    return new List<Timetable>{slots};
+                    return new Timetables(ImmutableList.Create(slots));
 
                 if (trackNo == maxTrack)
-                    return generate(slotNo + 1, 0, new[]{slot}.Concat(slots).ToList(), new Talks(), talks, talks);
+                {
+                    return generate(slotNo + 1, 0, new Timetable(ImmutableList.CreateRange(new[]{slot}.Concat(slots.AsEnumerable()))), new Talks(ImmutableList<Talk>.Empty), talks, talks);
+                }
 
-                return Selects(slotTalks).SelectMany(tuple =>
+                return new Timetables(ImmutableList.CreateRange(Selects(slotTalks.AsEnumerable().ToImmutableList()).SelectMany(tuple =>
                 {
                     var t = tuple.Item1;
                     var ts = tuple.Item2;
                     Talks clashesWithT;
                     if (!clashes.TryGetValue(t, out clashesWithT))
                     {
-                        clashesWithT = new Talks();
+                        clashesWithT = new Talks(ImmutableList<Talk>.Empty);
                     }
-                    var slotTalks2 = ts.Except(clashesWithT).ToList();
-                    var talks2 = talks.Where(x => x != t).ToList();
-                    return generate(slotNo, trackNo + 1, slots, new[]{t}.Concat(slot).ToList(), slotTalks2, talks2);
-                }).ToList();
+                    var slotTalks2 = new Talks(ImmutableList.CreateRange(ts.Except(clashesWithT.AsEnumerable())));
+                    var talks2 = new Talks(ImmutableList.CreateRange(talks.AsEnumerable().Where(x => x != t)));
+                    return generate(slotNo, trackNo + 1, slots, new Talks(ImmutableList.CreateRange(new[]{t}.Concat(slot.AsEnumerable()))), slotTalks2, talks2).AsEnumerable();
+                })));
             };
 
-            return generate(0, 0, new Timetable(), new Talks(), allTalks, allTalks);
+            return generate(0, 0, new Timetable(ImmutableList<Talks>.Empty), new Talks(ImmutableList<Talk>.Empty), allTalks, allTalks);
         }
 
-        private static ClashesMap BuildClashesMap(IEnumerable<Person> people)
+        private static Dictionary<Talk, Talks> BuildClashesMap(IEnumerable<Person> people)
         {
             return people
-                .SelectMany(s => Selects(s.Talks))
+                .SelectMany(s => Selects(s.Talks.AsEnumerable().ToImmutableList()))
                 .ToLookup(
                     x => x.Item1,
-                    x => x.Item2)
+                    x => x.Item2.ToImmutableList())
                 .ToDictionary(
                     x => x.Key,
-                    // ReSharper disable once PossibleMultipleEnumeration
-                    x => x.SelectMany(y => y).Distinct().ToList());
+                    x => new Talks(ImmutableList.CreateRange(x.SelectMany(ts => ts).Distinct())));
         }
 
-        private static IEnumerable<Tuple<T, IEnumerable<T>>> Selects<T>(IList<T> xs)
+        private static IEnumerable<Tuple<T, IEnumerable<T>>> Selects<T>(IImmutableList<T> xs)
         {
-            return xs.Select(x => Tuple.Create(x, xs.Except(new[]{x})));
-        }
-    }
-
-    internal class Person
-    {
-        private readonly string _name;
-        private readonly Talks _talks;
-
-        public Person(string name, Talks talks)
-        {
-            _name = name;
-            _talks = talks;
-        }
-
-        public string Name
-        {
-            get { return _name; }
-        }
-
-        public Talks Talks
-        {
-            get { return _talks; }
+            return xs.Select(x => Tuple.Create(x, xs.Except(new[] { x })));
         }
     }
 }
