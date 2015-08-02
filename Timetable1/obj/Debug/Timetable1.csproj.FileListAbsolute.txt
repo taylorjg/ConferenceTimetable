@@ -1,0 +1,6 @@
+C:\Users\taylorjg\Documents\GitHub\ConferenceTimetable\Timetable1\bin\Debug\Timetable1.exe.config
+C:\Users\taylorjg\Documents\GitHub\ConferenceTimetable\Timetable1\bin\Debug\Timetable1.exe
+C:\Users\taylorjg\Documents\GitHub\ConferenceTimetable\Timetable1\bin\Debug\Timetable1.pdb
+C:\Users\taylorjg\Documents\GitHub\ConferenceTimetable\Timetable1\obj\Debug\Timetable1.csprojResolveAssemblyReference.cache
+C:\Users\taylorjg\Documents\GitHub\ConferenceTimetable\Timetable1\obj\Debug\Timetable1.exe
+C:\Users\taylorjg\Documents\GitHub\ConferenceTimetable\Timetable1\obj\Debug\Timetable1.pdb
