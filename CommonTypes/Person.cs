@@ -1,4 +1,6 @@
-﻿namespace CommonTypes
+﻿using System.Collections.Immutable;
+
+namespace CommonTypes
 {
     public class Person
     {
@@ -9,6 +11,11 @@
         {
             _name = name;
             _talks = talks;
+        }
+
+        public Person(string name, params Talk[] talks)
+            : this(name, new Talks(talks))
+        {
         }
 
         public string Name

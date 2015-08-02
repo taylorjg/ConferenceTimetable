@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace CommonTypes
 {
@@ -12,7 +13,26 @@ namespace CommonTypes
             _talks = talks;
         }
 
-        public IEnumerable<Talk> AsEnumerable()
+        public Talks(params Talk[] talks)
+            : this(ImmutableList.CreateRange(talks))
+        {
+        }
+
+        public Talks(IEnumerable<Talk> talks)
+            : this(ImmutableList.CreateRange(talks))
+        {
+        }
+
+        public Talks(Talk talk, Talks moreTalks)
+            : this(new []{talk}.Concat(moreTalks.AsImmutableList()).ToArray())
+        {
+        }
+
+        public Talks() : this(ImmutableList<Talk>.Empty)
+        {
+        }
+
+        public IImmutableList<Talk> AsImmutableList()
         {
             return _talks;
         }

@@ -1,20 +1,34 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
+using System.Linq;
 
 namespace CommonTypes
 {
     public class Timetable
     {
-        private readonly IImmutableList<Talks> _timetable;
+        private readonly IImmutableList<Talks> _talks;
 
-        public Timetable(IImmutableList<Talks> timetable)
+        public Timetable(IImmutableList<Talks> talks)
         {
-            _timetable = timetable;
+            _talks = talks;
         }
 
-        public IEnumerable<Talks> AsEnumerable()
+        public Timetable(params Talks[] talks)
+            : this(ImmutableList.CreateRange(talks))
         {
-            return _timetable;
+        }
+
+        public Timetable(Talks talks, Timetable timetable)
+            : this(new []{talks}.Concat(timetable.AsImmutableList()).ToArray())
+        {
+        }
+
+        public Timetable() : this(ImmutableList<Talks>.Empty)
+        {
+        }
+
+        public IImmutableList<Talks> AsImmutableList()
+        {
+            return _talks;
         }
     }
 }

@@ -12,7 +12,22 @@ namespace CommonTypes
             _timetables = timetables;
         }
 
-        public IEnumerable<Timetable> AsEnumerable()
+        public Timetables(params Timetable[] timetables)
+            : this(ImmutableList.CreateRange(timetables))
+        {
+        }
+
+        public Timetables(IEnumerable<Timetable> timetables)
+            : this(ImmutableList.CreateRange(timetables))
+        {
+        }
+
+        public Timetables()
+            : this(ImmutableList<Timetable>.Empty)
+        {
+        }
+
+        public IImmutableList<Timetable> AsImmutableList()
         {
             return _timetables;
         }
