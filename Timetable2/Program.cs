@@ -7,7 +7,6 @@ using CommonTypes;
 namespace Timetable2
 {
     using Partial = Tuple<int, int, Timetable, Talks, Talks, Talks>;
-    using Solution = Timetable;
 
     internal static class Program
     {
@@ -38,10 +37,10 @@ namespace Timetable2
         {
             var emptysoln = Tuple.Create(0, 0, new Timetable(), new Talks(), allTalks, allTalks);
 
-            Func<Partial, Solution> finished = tuple =>
+            Func<Partial, Timetable> finished = finishedTuple =>
             {
-                var slotNo = tuple.Item1;
-                var slots = tuple.Item3;
+                var slotNo = finishedTuple.Item1;
+                var slots = finishedTuple.Item3;
                 return slotNo == maxSlot ? slots : null;
             };
 
