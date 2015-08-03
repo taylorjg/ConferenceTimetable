@@ -70,7 +70,36 @@ namespace Timetable2
                 });
             };
 
-            return new Timetables(Search(finished, refine, emptysoln));
+            return new Timetables(ParSearch(finished, refine, emptysoln));
+        }
+
+        private static IEnumerable<TSolution> ParSearch<TPartial, TSolution>(
+            Func<TPartial, TSolution> finished,
+            Func<TPartial, IEnumerable<TPartial>> refine,
+            TPartial emptysoln) where TSolution : class
+        {
+            Func<TPartial, IEnumerable<TSolution>> generate = null;
+
+            //generate = @partial =>
+            //{
+            //    return finished(@partial) != null
+            //        ? new[] {finished(@partial)}
+            //        : refine(@partial).AsParallel().SelectMany(p => generate(p)).AsEnumerable();
+            //};
+
+            generate = @partial =>
+            {
+                return finished(@partial) != null
+                    ? new[] {finished(@partial)}
+                    : refine(@partial)
+                        .AsParallel()
+                        .Select(p => generate(p))
+                        .AsSequential()
+                        // ReSharper disable once PossibleMultipleEnumeration
+                        .SelectMany(s => s);
+            };
+
+            return generate(emptysoln);
         }
 
         private static IEnumerable<TSolution> Search<TPartial, TSolution>(
@@ -80,12 +109,10 @@ namespace Timetable2
         {
             Func<TPartial, IEnumerable<TSolution>> generate = null;
 
-            generate = @partial =>
-            {
-                var soln = finished(@partial);
                 // ReSharper disable once AssignNullToNotNullAttribute
-                return soln != null ? new[] { soln } : refine(@partial).SelectMany(generate);
-            };
+            generate = @partial => finished(@partial) != null
+                ? new[] { finished(@partial) }
+                : refine(@partial).SelectMany(generate);
 
             return generate(emptysoln);
         }
