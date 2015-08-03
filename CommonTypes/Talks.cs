@@ -8,27 +8,18 @@ namespace CommonTypes
     {
         private readonly IImmutableList<Talk> _talks;
 
-        public Talks(IImmutableList<Talk> talks)
+        public Talks(IEnumerable<Talk> talks)
         {
-            _talks = talks;
+            _talks = ImmutableList.CreateRange(talks);
         }
 
         public Talks(params Talk[] talks)
-            : this(ImmutableList.CreateRange(talks))
-        {
-        }
-
-        public Talks(IEnumerable<Talk> talks)
-            : this(ImmutableList.CreateRange(talks))
+            : this(talks.AsEnumerable())
         {
         }
 
         public Talks(Talk talk, Talks moreTalks)
-            : this(new []{talk}.Concat(moreTalks.AsImmutableList()).ToArray())
-        {
-        }
-
-        public Talks() : this(ImmutableList<Talk>.Empty)
+            : this(new []{talk}.Concat(moreTalks.AsImmutableList()))
         {
         }
 

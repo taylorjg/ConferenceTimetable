@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 
 namespace CommonTypes
 {
@@ -7,23 +8,13 @@ namespace CommonTypes
     {
         private readonly IImmutableList<Timetable> _timetables;
 
-        public Timetables(IImmutableList<Timetable> timetables)
+        public Timetables(IEnumerable<Timetable> timetables)
         {
-            _timetables = timetables;
+            _timetables = ImmutableList.CreateRange(timetables);
         }
 
         public Timetables(params Timetable[] timetables)
-            : this(ImmutableList.CreateRange(timetables))
-        {
-        }
-
-        public Timetables(IEnumerable<Timetable> timetables)
-            : this(ImmutableList.CreateRange(timetables))
-        {
-        }
-
-        public Timetables()
-            : this(ImmutableList<Timetable>.Empty)
+            : this(timetables.AsEnumerable())
         {
         }
 

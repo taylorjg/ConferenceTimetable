@@ -69,7 +69,7 @@ namespace Timetable1
                     x => x.Item2.ToImmutableList())
                 .ToDictionary(
                     x => x.Key,
-                    x => new Talks(ImmutableList.CreateRange(x.SelectMany(ts => ts).Distinct())));
+                    x => new Talks(x.SelectMany(ts => ts).Distinct()));
         }
 
         private static IEnumerable<Tuple<T, IEnumerable<T>>> Selects<T>(IImmutableList<T> xs)

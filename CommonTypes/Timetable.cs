@@ -1,4 +1,5 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace CommonTypes
@@ -7,22 +8,18 @@ namespace CommonTypes
     {
         private readonly IImmutableList<Talks> _talks;
 
-        public Timetable(IImmutableList<Talks> talks)
+        public Timetable(IEnumerable<Talks> talks)
         {
-            _talks = talks;
+            _talks = ImmutableList.CreateRange(talks);
         }
 
         public Timetable(params Talks[] talks)
-            : this(ImmutableList.CreateRange(talks))
+            : this(talks.AsEnumerable())
         {
         }
 
         public Timetable(Talks talks, Timetable timetable)
-            : this(new []{talks}.Concat(timetable.AsImmutableList()).ToArray())
-        {
-        }
-
-        public Timetable() : this(ImmutableList<Talks>.Empty)
+            : this(new []{talks}.Concat(timetable.AsImmutableList()))
         {
         }
 
