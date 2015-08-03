@@ -14,6 +14,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timetable1", "Timetable1\Ti
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonTypes", "CommonTypes\CommonTypes.csproj", "{8225F878-446A-4566-B88C-DF0C8A9EA4F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timetable2", "Timetable2\Timetable2.csproj", "{ACB324C3-7A50-46B0-BFF6-56752C98901C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -28,6 +30,10 @@ Global
 		{8225F878-446A-4566-B88C-DF0C8A9EA4F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8225F878-446A-4566-B88C-DF0C8A9EA4F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8225F878-446A-4566-B88C-DF0C8A9EA4F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACB324C3-7A50-46B0-BFF6-56752C98901C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACB324C3-7A50-46B0-BFF6-56752C98901C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACB324C3-7A50-46B0-BFF6-56752C98901C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACB324C3-7A50-46B0-BFF6-56752C98901C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
