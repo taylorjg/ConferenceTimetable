@@ -13,12 +13,15 @@ namespace Timetable2
     {
         private static void Main()
         {
-            var testData = MakeTestData(4, 3, 11, 10, 3);
-            var timetables = Test();
-            Console.WriteLine("Number of timetables found: {0}", timetables.AsImmutableList().Count());
+            var timetables1 = Test();
+            Console.WriteLine("Number of timetables found: {0}", timetables1.AsImmutableList().Count());
+
+            var testData = GenTestData(4, 3, 11, 10, 3).Sample(1, 1).First();
+            var timetables2 = Timetable(testData.Item1, testData.Item2, 3, 4);
+            Console.WriteLine("Number of timetables found: {0}", timetables2.AsImmutableList().Count());
         }
 
-        private static Tuple<IEnumerable<Person>, Talks> MakeTestData(
+        private static Gen<Tuple<IEnumerable<Person>, Talks>> GenTestData(
             int nslots,
             int ntracks,
             int ntalks,
@@ -28,25 +31,21 @@ namespace Timetable2
             var totalTalks = nslots*ntracks;
             var talks = Enumerable.Range(1, totalTalks).Select(n => new Talk(n)).ToList();
 
-            Func<int, IEnumerable<Person>> mkPersons = null;
+            Func<int, Gen<IEnumerable<Person>>> mkPersons = null;
             
             mkPersons = n =>
             {
-                if (n == 0) return Enumerable.Empty<Person>();
+                if (n == 0) return Gen.Constant(Enumerable.Empty<Person>());
 
-                var name = string.Format("P{0}", n);
-
-                var gen = FsCheckUtils.PickValues(cPerS, talks.Take(ntalks));
-                var cs = gen.Sample(0, 1).First();
-
-                var person = new Person(name, new Talks(cs));
-                var rest = mkPersons(n - 1);
-                return rest.Concat(new[]{person});
+                return
+                    from ts in FsCheckUtils.PickValues(cPerS, talks.Take(ntalks))
+                    let name = string.Format("P{0}", n)
+                    let person = new Person(name, new Talks(ts))
+                    from rest in mkPersons(n - 1)
+                    select rest.Concat(new []{person});
             };
 
-            var persons = mkPersons(npersons);
-
-            return Tuple.Create(persons, new Talks(talks));
+            return mkPersons(npersons).Select(ps => Tuple.Create(ps, new Talks(talks)));
         }
 
         private static Timetables Test()
