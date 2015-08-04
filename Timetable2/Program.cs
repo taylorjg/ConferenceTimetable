@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using CommonTypes;
+using FsCheck;
 
 namespace Timetable2
 {
@@ -12,8 +13,40 @@ namespace Timetable2
     {
         private static void Main()
         {
+            var testData = MakeTestData(4, 3, 11, 10, 3);
             var timetables = Test();
             Console.WriteLine("Number of timetables found: {0}", timetables.AsImmutableList().Count());
+        }
+
+        private static Tuple<IEnumerable<Person>, Talks> MakeTestData(
+            int nslots,
+            int ntracks,
+            int ntalks,
+            int npersons,
+            int cPerS)
+        {
+            var totalTalks = nslots*ntracks;
+            var talks = Enumerable.Range(1, totalTalks).Select(n => new Talk(n)).ToList();
+
+            Func<int, IEnumerable<Person>> mkPersons = null;
+            
+            mkPersons = n =>
+            {
+                if (n == 0) return Enumerable.Empty<Person>();
+
+                var name = string.Format("P{0}", n);
+
+                var gen = FsCheckUtils.PickValues(cPerS, talks.Take(ntalks));
+                var cs = gen.Sample(0, 1).First();
+
+                var person = new Person(name, new Talks(cs));
+                var rest = mkPersons(n - 1);
+                return rest.Concat(new[]{person});
+            };
+
+            var persons = mkPersons(npersons);
+
+            return Tuple.Create(persons, new Talks(talks));
         }
 
         private static Timetables Test()
