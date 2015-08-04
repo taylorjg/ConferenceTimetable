@@ -70,36 +70,33 @@ namespace Timetable2
                 });
             };
 
-            return new Timetables(ParSearch(finished, refine, emptysoln));
+            return new Timetables(ParSearch(3, finished, refine, emptysoln));
         }
 
         private static IEnumerable<TSolution> ParSearch<TPartial, TSolution>(
+            int maxDepth,
             Func<TPartial, TSolution> finished,
             Func<TPartial, IEnumerable<TPartial>> refine,
             TPartial emptysoln) where TSolution : class
         {
-            Func<TPartial, IEnumerable<TSolution>> generate = null;
+            Func<int, TPartial, IEnumerable<TSolution>> generate = null;
 
-            //generate = @partial =>
-            //{
-            //    return finished(@partial) != null
-            //        ? new[] {finished(@partial)}
-            //        : refine(@partial).AsParallel().SelectMany(p => generate(p)).AsEnumerable();
-            //};
-
-            generate = @partial =>
+            // ReSharper disable once AssignNullToNotNullAttribute
+            generate = (d, @partial) =>
             {
-                return finished(@partial) != null
-                    ? new[] {finished(@partial)}
+                if (d >= maxDepth) return Search(finished, refine, @partial);
+
+                var soln = finished(@partial);
+                return soln != null
+                    ? new[] {soln}
                     : refine(@partial)
                         .AsParallel()
-                        .Select(p => generate(p))
-                        .AsSequential()
-                        // ReSharper disable once PossibleMultipleEnumeration
-                        .SelectMany(s => s);
+                        .AsUnordered()
+                        .SelectMany(p => generate(d + 1, p))
+                        .AsEnumerable();
             };
 
-            return generate(emptysoln);
+            return generate(0, emptysoln);
         }
 
         private static IEnumerable<TSolution> Search<TPartial, TSolution>(
@@ -109,10 +106,14 @@ namespace Timetable2
         {
             Func<TPartial, IEnumerable<TSolution>> generate = null;
 
-                // ReSharper disable once AssignNullToNotNullAttribute
-            generate = @partial => finished(@partial) != null
-                ? new[] { finished(@partial) }
-                : refine(@partial).SelectMany(generate);
+            // ReSharper disable once AssignNullToNotNullAttribute
+            generate = @partial =>
+            {
+                var soln = finished(@partial);
+                return soln != null
+                    ? new[] {soln}
+                    : refine(@partial).SelectMany(generate);
+            };
 
             return generate(emptysoln);
         }
