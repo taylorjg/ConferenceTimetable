@@ -2,7 +2,7 @@
 using System.Linq;
 using FsCheck;
 
-namespace Timetable2
+namespace CommonTypes
 {
     public static class FsCheckUtils
     {
