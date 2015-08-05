@@ -13,11 +13,11 @@ namespace Timetable2
             var testData = Utils.GetHardCodedTestData();
             Utils.DumpTestData(testData.Item1, testData.Item2);
             var timetables = Timetable(testData.Item1, testData.Item2, 3, 4);
-            Utils.DumpTimetables(timetables, 4);
-            Console.WriteLine("Number of timetables found: {0}", timetables.AsImmutableList().Count());
+            Utils.DumpTimetables(timetables.Take(4));
+            Console.WriteLine("Number of timetables found: {0}", timetables.Count());
         }
 
-        private static Timetables Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
+        private static IEnumerable<Timetable> Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
         {
             var emptysoln = new Partial(0, 0, new Timetable(), new Talks(), allTalks, allTalks);
 
@@ -54,8 +54,8 @@ namespace Timetable2
                 });
             };
 
-            return new Timetables(ParSearch(3, finished, refine, emptysoln));
-            //return new Timetables(Search(finished, refine, emptysoln));
+            return ParSearch(3, finished, refine, emptysoln);
+            //return Search(finished, refine, emptysoln);
         }
 
         private static IEnumerable<TSolution> ParSearch<TPartial, TSolution>(

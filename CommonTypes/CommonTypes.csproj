@@ -59,7 +59,6 @@
     <Compile Include="Talk.cs" />
     <Compile Include="Talks.cs" />
     <Compile Include="Timetable.cs" />
-    <Compile Include="Timetables.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>

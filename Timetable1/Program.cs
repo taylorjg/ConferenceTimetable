@@ -11,10 +11,10 @@ namespace Timetable1
         private static void Main()
         {
             var timetables = Test();
-            Console.WriteLine("Number of timetables found: {0}", timetables.AsImmutableList().Count());
+            Console.WriteLine("Number of timetables found: {0}", timetables.Count());
         }
 
-        private static Timetables Test()
+        private static IEnumerable<Timetable> Test()
         {
             var c1 = new Talk(1);
             var c2 = new Talk(2);
@@ -31,21 +31,21 @@ namespace Timetable1
             return Timetable(testPersons, cs, 2, 2);
         }
 
-        private static Timetables Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
+        private static IEnumerable<Timetable> Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
         {
             var clashes = BuildClashesMap(people);
 
-            Func<int, int, Timetable, Talks, Talks, Talks, Timetables> generate = null;
+            Func<int, int, Timetable, Talks, Talks, Talks, IEnumerable<Timetable>> generate = null;
 
             generate = (slotNo, trackNo, slots, slot, slotTalks, talks) =>
             {
                 if (slotNo == maxSlot)
-                    return new Timetables(slots);
+                    return new[] {slots};
 
                 if (trackNo == maxTrack)
                     return generate(slotNo + 1, 0, new Timetable(slot, slots), new Talks(), talks, talks);
 
-                return new Timetables(Selects(slotTalks.AsImmutableList()).SelectMany(tuple =>
+                return Selects(slotTalks.AsImmutableList()).SelectMany(tuple =>
                 {
                     var t = tuple.Item1;
                     var ts = tuple.Item2;
@@ -53,8 +53,8 @@ namespace Timetable1
                     if (!clashes.TryGetValue(t, out clashesWithT)) clashesWithT = new Talks();
                     var slotTalks2 = new Talks(ts.Except(clashesWithT.AsImmutableList()));
                     var talks2 = new Talks(talks.AsImmutableList().Where(talk => talk != t));
-                    return generate(slotNo, trackNo + 1, slots, new Talks(t, slot), slotTalks2, talks2).AsImmutableList();
-                }));
+                    return generate(slotNo, trackNo + 1, slots, new Talks(t, slot), slotTalks2, talks2);
+                });
             };
 
             return generate(0, 0, new Timetable(), new Talks(), allTalks, allTalks);

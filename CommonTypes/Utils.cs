@@ -73,9 +73,9 @@ namespace CommonTypes
             }
         }
 
-        public static void DumpTimetables(Timetables timetables, int n = int.MaxValue)
+        public static void DumpTimetables(IEnumerable<Timetable> timetables)
         {
-            foreach (var timetable in timetables.AsImmutableList().Take(n))
+            foreach (var timetable in timetables)
             {
                 DumpTimetable(timetable);
                 Console.WriteLine();
