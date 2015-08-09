@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using CommonTypes;
 
 namespace Timetable2
@@ -12,9 +13,21 @@ namespace Timetable2
         {
             var testData = Utils.GetHardCodedTestData();
             Utils.DumpTestData(testData.Item1, testData.Item2);
-            var timetables = Timetable(testData.Item1, testData.Item2, 3, 4);
-            Utils.DumpTimetables(timetables.Take(4));
-            Console.WriteLine("Number of timetables found: {0}", timetables.Count());
+            Utils.RunWithStats(() =>
+            {
+                var timetables = Timetable(testData.Item1, testData.Item2, 3, 4);
+                var count = 0;
+                const int numberToPrint = 4;
+                using (var e = timetables.GetEnumerator())
+                {
+                    while (e.MoveNext())
+                    {
+                        if (count <= numberToPrint) Utils.DumpTimetable(e.Current);
+                        count++;
+                    }
+                }
+                Console.WriteLine("Number of timetables found: {0}", count);
+            });
         }
 
         private static IEnumerable<Timetable> Timetable(IEnumerable<Person> people, Talks allTalks, int maxTrack, int maxSlot)
@@ -72,13 +85,30 @@ namespace Timetable2
                 if (d >= maxDepth) return Search(finished, refine, @partial);
 
                 var soln = finished(@partial);
-                return soln != null
-                    ? new[] {soln}
-                    : refine(@partial)
-                        .AsParallel()
-                        .AsUnordered()
-                        .SelectMany(p => generate(d + 1, p))
-                        .AsEnumerable();
+
+                if (soln != null) return Enumerable.Repeat(soln, 1);
+
+                var solnss = new List<List<TSolution>>();
+                var lockObject = new object();
+
+                Parallel.ForEach(
+                    refine(@partial),
+                    () =>
+                        new List<List<TSolution>>(),
+                    (p, _, local) =>
+                    {
+                        local.Add(generate(d + 1, p).ToList());
+                        return local;
+                    },
+                    local =>
+                    {
+                        lock (lockObject)
+                        {
+                            solnss.AddRange(local);
+                        }
+                    });
+
+                return solnss.SelectMany(x => x);
             };
 
             return generate(0, emptysoln);

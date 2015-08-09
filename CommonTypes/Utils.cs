@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using FsCheck;
 
@@ -32,6 +33,36 @@ namespace CommonTypes
             };
 
             return mkPersons(npersons).Select(ps => Tuple.Create(ps, new Talks(talks)));
+        }
+
+        public static void RunWithStats(Action action)
+        {
+            var process1 = Process.GetCurrentProcess();
+            var beforeWorkingSet64 = process1.WorkingSet64;
+            var beforePeakWorkingSet64 = process1.PeakWorkingSet64;
+            var beforeVirtualMemorySize64 = process1.VirtualMemorySize64;
+            var beforePeakVirtualMemorySize64 = process1.PeakVirtualMemorySize64;
+            Console.WriteLine("WorkingSet64: {0:N0}", beforeWorkingSet64);
+            Console.WriteLine("PeakWorkingSet64: {0:N0}", beforePeakWorkingSet64);
+            Console.WriteLine("VirtualMemorySize64: {0:N0}", beforeVirtualMemorySize64);
+            Console.WriteLine("PeakVirtualMemorySize64: {0:N0}", beforePeakVirtualMemorySize64);
+
+            var stopwatch = Stopwatch.StartNew();
+
+            action();
+
+            stopwatch.Stop();
+            Console.WriteLine("stopwatch.Elapsed: {0}", stopwatch.Elapsed);
+
+            var process2 = Process.GetCurrentProcess();
+            var afterWorkingSet64 = process2.WorkingSet64;
+            var afterPeakWorkingSet64 = process2.PeakWorkingSet64;
+            var afterVirtualMemorySize64 = process2.VirtualMemorySize64;
+            var afterPeakVirtualMemorySize64 = process2.PeakVirtualMemorySize64;
+            Console.WriteLine("WorkingSet64: {0:N0} ({1:N0})", afterWorkingSet64, afterWorkingSet64 - beforeWorkingSet64);
+            Console.WriteLine("PeakWorkingSet64: {0:N0} ({1:N0})", afterPeakWorkingSet64, afterPeakWorkingSet64 - beforePeakWorkingSet64);
+            Console.WriteLine("VirtualMemorySize64: {0:N0} ({1:N0})", afterVirtualMemorySize64, afterVirtualMemorySize64 - beforeVirtualMemorySize64);
+            Console.WriteLine("PeakVirtualMemorySize64: {0:N0} ({1:N0})", afterPeakVirtualMemorySize64, afterPeakVirtualMemorySize64 - beforePeakVirtualMemorySize64);
         }
 
         public static Tuple<IEnumerable<Person>, Talks> GetHardCodedTestData()
