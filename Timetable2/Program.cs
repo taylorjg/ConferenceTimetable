@@ -11,21 +11,31 @@ namespace Timetable2
     {
         private static void Main()
         {
-            var testData = Utils.GetHardCodedTestData();
-            Utils.DumpTestData(testData.Item1, testData.Item2);
             Utils.RunWithStats(() =>
             {
-                var timetables = Timetable(testData.Item1, testData.Item2, 3, 4);
+                var testData = Utils.GetHardCodedTestData();
+                Utils.DumpTestData(testData.Item1, testData.Item2);
+
+                const int maxTrack = 3;
+                const int maxSlot = 4;
+
+                var timetables = Timetable(testData.Item1, testData.Item2, maxTrack, maxSlot);
+
                 var count = 0;
-                const int numberToPrint = 4;
+                const int numTimetablesToDump = 4;
+
                 using (var e = timetables.GetEnumerator())
                 {
                     while (e.MoveNext())
                     {
-                        if (count <= numberToPrint) Utils.DumpTimetable(e.Current);
-                        count++;
+                        if (count++ <= numTimetablesToDump)
+                        {
+                            Utils.DumpTimetable(e.Current);
+                            Console.WriteLine();
+                        }
                     }
                 }
+
                 Console.WriteLine("Number of timetables found: {0}", count);
             });
         }
@@ -67,7 +77,7 @@ namespace Timetable2
                 });
             };
 
-            return ParSearch(3, finished, refine, emptysoln);
+            return ParSearch(4, finished, refine, emptysoln);
             //return Search(finished, refine, emptysoln);
         }
 
@@ -88,27 +98,28 @@ namespace Timetable2
 
                 if (soln != null) return Enumerable.Repeat(soln, 1);
 
-                var solnss = new List<List<TSolution>>();
+                var solnss = new List<List<IEnumerable<TSolution>>>();
                 var lockObject = new object();
 
                 Parallel.ForEach(
                     refine(@partial),
                     () =>
-                        new List<List<TSolution>>(),
+                        new List<IEnumerable<TSolution>>(),
                     (p, _, local) =>
                     {
                         local.Add(generate(d + 1, p).ToList());
+                        //local.Add(generate(d + 1, p).ToChunckedList(4));
                         return local;
                     },
                     local =>
                     {
                         lock (lockObject)
                         {
-                            solnss.AddRange(local);
+                            solnss.Add(local);
                         }
                     });
 
-                return solnss.SelectMany(x => x);
+                return ConcatAll(ConcatAll(solnss));
             };
 
             return generate(0, emptysoln);
@@ -126,8 +137,8 @@ namespace Timetable2
             {
                 var soln = finished(@partial);
                 return soln != null
-                    ? new[] {soln}
-                    : refine(@partial).SelectMany(generate);
+                    ? Enumerable.Repeat(soln, 1)
+                    : ConcatAll(refine(@partial).Select(generate));
             };
 
             return generate(emptysoln);
@@ -148,6 +159,14 @@ namespace Timetable2
         private static IEnumerable<Tuple<T, IEnumerable<T>>> Selects<T>(IImmutableList<T> xs)
         {
             return xs.Select(x => Tuple.Create(x, xs.Except(new[] { x })));
+        }
+
+        private static IEnumerable<T> ConcatAll<T>(IEnumerable<IEnumerable<T>> sources)
+        {
+            foreach (var source in sources)
+                using (var e = source.GetEnumerator())
+                    while (e.MoveNext())
+                        yield return e.Current;
         }
     }
 }
